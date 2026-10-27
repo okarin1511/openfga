@@ -943,21 +943,21 @@ func TestSqlWeight1_SubjectScopingSQL(t *testing.T) {
 			name:   "direct_user",
 			rels:   "define can_view: [user]",
 			user:   "user:alice",
-			sql:    selectOne + "\"t\".user_object_id = ? AND \"t\".user_type = 'user' AND \"t\".relation = 'can_view' AND " + uncond + ") LIMIT 1",
+			sql:    selectOne + "\"t\".user_object_id = ? AND \"t\".relation = 'can_view' AND " + uncond + ") LIMIT 1",
 			params: []any{"store1", "document", "1", "user", "", "alice"},
 		},
 		{
 			name:   "direct_user_conditioned",
 			rels:   "define can_view: [user with cond]",
 			user:   "user:alice",
-			sql:    selectConditioned + "\"t\".user_object_id = ? AND \"t\".user_type = 'user' AND \"t\".relation = 'can_view' AND (\"t\".relation = 'can_view' AND COALESCE(\"t\".condition_name, '') = 'cond'))",
+			sql:    selectConditioned + "\"t\".user_object_id = ? AND \"t\".relation = 'can_view' AND (\"t\".relation = 'can_view' AND COALESCE(\"t\".condition_name, '') = 'cond'))",
 			params: []any{"store1", "document", "1", "user", "", "alice"},
 		},
 		{
 			name: "direct_user_wildcard_leaf",
 			rels: "define viewer: [user]\n define editor: [user:*]\n define can_view: viewer and editor",
 			user: "user:alice",
-			sql: selectHaving + "\"t\".user_object_id IN (?, ?) AND \"t\".user_type IN ('user', 'userset') AND \"t\".relation IN ('editor', 'viewer') AND " + uncond + ") HAVING (" +
+			sql: selectHaving + "\"t\".user_object_id IN (?, ?) AND \"t\".relation IN ('editor', 'viewer') AND " + uncond + ") HAVING (" +
 				"COUNT(1) FILTER (WHERE (\"t\".relation = 'viewer' AND \"t\".user_object_id = ?)) > 0 AND " +
 				"COUNT(1) FILTER (WHERE (\"t\".relation = 'editor' AND \"t\".user_object_id = '*')) > 0)) LIMIT 1",
 			params: []any{"store1", "document", "1", "user", "", "alice", "*", "alice"},
@@ -966,7 +966,7 @@ func TestSqlWeight1_SubjectScopingSQL(t *testing.T) {
 			name: "direct_user_wildcard_leaf_same_relation",
 			rels: "define can_view: [user, user:*]",
 			user: "user:alice",
-			sql: selectHaving + "\"t\".user_object_id IN (?, ?) AND \"t\".user_type IN ('user', 'userset') AND \"t\".relation = 'can_view' AND " + uncond + ") HAVING (" +
+			sql: selectHaving + "\"t\".user_object_id IN (?, ?) AND \"t\".relation = 'can_view' AND " + uncond + ") HAVING (" +
 				"COUNT(1) FILTER (WHERE (\"t\".relation = 'can_view' AND \"t\".user_object_id = ?)) > 0 OR " +
 				"COUNT(1) FILTER (WHERE (\"t\".relation = 'can_view' AND \"t\".user_object_id = '*')) > 0)) LIMIT 1",
 			params: []any{"store1", "document", "1", "user", "", "alice", "*", "alice"},
@@ -976,7 +976,7 @@ func TestSqlWeight1_SubjectScopingSQL(t *testing.T) {
 			name: "direct_user_wildcard_leaf_pure_union",
 			rels: "define viewer: [user]\n define editor: [user:*]\n define can_view: viewer or editor",
 			user: "user:alice",
-			sql: selectHaving + "\"t\".user_object_id IN (?, ?) AND \"t\".user_type IN ('user', 'userset') AND \"t\".relation IN ('editor', 'viewer') AND " + uncond + ") HAVING (" +
+			sql: selectHaving + "\"t\".user_object_id IN (?, ?) AND \"t\".relation IN ('editor', 'viewer') AND " + uncond + ") HAVING (" +
 				"COUNT(1) FILTER (WHERE (\"t\".relation = 'viewer' AND \"t\".user_object_id = ?)) > 0 OR " +
 				"COUNT(1) FILTER (WHERE (\"t\".relation = 'editor' AND \"t\".user_object_id = '*')) > 0)) LIMIT 1",
 			params: []any{"store1", "document", "1", "user", "", "alice", "*", "alice"},
@@ -985,7 +985,7 @@ func TestSqlWeight1_SubjectScopingSQL(t *testing.T) {
 			name: "union_of_intersections",
 			rels: "define a: [user]\n define b: [user]\n define c: [user]\n define d: [user]\n define can_view: (a and b) or (c and d)",
 			user: "user:alice",
-			sql: selectHaving + "\"t\".user_object_id = ? AND \"t\".user_type = 'user' AND \"t\".relation IN ('a', 'b', 'c', 'd') AND " + uncond + ") HAVING (" +
+			sql: selectHaving + "\"t\".user_object_id = ? AND \"t\".relation IN ('a', 'b', 'c', 'd') AND " + uncond + ") HAVING (" +
 				"(COUNT(1) FILTER (WHERE \"t\".relation = 'a') > 0 AND COUNT(1) FILTER (WHERE \"t\".relation = 'b') > 0) OR " +
 				"(COUNT(1) FILTER (WHERE \"t\".relation = 'c') > 0 AND COUNT(1) FILTER (WHERE \"t\".relation = 'd') > 0))) LIMIT 1",
 			params: []any{"store1", "document", "1", "user", "", "alice"},
@@ -995,7 +995,7 @@ func TestSqlWeight1_SubjectScopingSQL(t *testing.T) {
 			name: "union_of_intersection_and_leaf",
 			rels: "define a: [user]\n define b: [user]\n define c: [user]\n define can_view: (a and b) or c",
 			user: "user:alice",
-			sql: selectHaving + "\"t\".user_object_id = ? AND \"t\".user_type = 'user' AND \"t\".relation IN ('a', 'b', 'c') AND " + uncond + ") HAVING (" +
+			sql: selectHaving + "\"t\".user_object_id = ? AND \"t\".relation IN ('a', 'b', 'c') AND " + uncond + ") HAVING (" +
 				"(COUNT(1) FILTER (WHERE \"t\".relation = 'a') > 0 AND COUNT(1) FILTER (WHERE \"t\".relation = 'b') > 0) OR " +
 				"COUNT(1) FILTER (WHERE \"t\".relation = 'c') > 0)) LIMIT 1",
 			params: []any{"store1", "document", "1", "user", "", "alice"},
@@ -1004,7 +1004,7 @@ func TestSqlWeight1_SubjectScopingSQL(t *testing.T) {
 			name: "direct_user_wildcard_leaf_conditioned",
 			rels: "define viewer: [user with cond]\n define editor: [user:*]\n define can_view: viewer and editor",
 			user: "user:alice",
-			sql: selectConditioned + "\"t\".user_object_id IN (?, ?) AND \"t\".user_type IN ('user', 'userset') AND \"t\".relation IN ('editor', 'viewer') AND (" +
+			sql: selectConditioned + "\"t\".user_object_id IN (?, ?) AND \"t\".relation IN ('editor', 'viewer') AND (" +
 				"(\"t\".relation = 'editor' AND \"t\".user_object_id = '*' AND " + uncond + ") OR " +
 				"(\"t\".relation = 'viewer' AND \"t\".user_object_id = ? AND COALESCE(\"t\".condition_name, '') = 'cond')))",
 			params: []any{"store1", "document", "1", "user", "", "alice", "*", "alice"},
@@ -1024,21 +1024,21 @@ func TestSqlWeight1_SubjectScopingSQL(t *testing.T) {
 			name:   "wildcard_user_wildcard_leaf",
 			rels:   "define viewer: [user]\n define editor: [user:*]\n define can_view: viewer or editor",
 			user:   "user:*",
-			sql:    selectOne + "\"t\".user_object_id = ? AND \"t\".user_type = 'userset' AND \"t\".relation = 'editor' AND " + uncond + ") LIMIT 1",
+			sql:    selectOne + "\"t\".user_object_id = ? AND \"t\".relation = 'editor' AND " + uncond + ") LIMIT 1",
 			params: []any{"store1", "document", "1", "user", "", "*"},
 		},
 		{
 			name:   "wildcard_user_wildcard_leaf_conditioned",
 			rels:   "define viewer: [user with cond]\n define editor: [user:* with cond]\n define can_view: viewer or editor",
 			user:   "user:*",
-			sql:    selectConditioned + "\"t\".user_object_id = ? AND \"t\".user_type = 'userset' AND \"t\".relation = 'editor' AND (\"t\".relation = 'editor' AND COALESCE(\"t\".condition_name, '') = 'cond'))",
+			sql:    selectConditioned + "\"t\".user_object_id = ? AND \"t\".relation = 'editor' AND (\"t\".relation = 'editor' AND COALESCE(\"t\".condition_name, '') = 'cond'))",
 			params: []any{"store1", "document", "1", "user", "", "*"},
 		},
 		{
 			name:   "userset_subject",
 			rels:   "define can_view: [group#member]",
 			user:   "group:eng#member",
-			sql:    selectOne + "\"t\".user_object_id = ? AND \"t\".user_type = 'userset' AND \"t\".relation = 'can_view' AND " + uncond + ") LIMIT 1",
+			sql:    selectOne + "\"t\".user_object_id = ? AND \"t\".relation = 'can_view' AND " + uncond + ") LIMIT 1",
 			params: []any{"store1", "document", "1", "group", "member", "eng"},
 		},
 	}
